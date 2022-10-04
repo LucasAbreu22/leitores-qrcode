@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
+
+    <title>Document</title>
+</head>
+<body>
+    <video id="preview" 
+           style="width:100%;height:100%" 
+           title="Posicione o QR code em frente a câmera para fazer a leitura">
+    </video>
+
+    <script>
+        var latromi = latromi || {};
+
+latromi.myForm = function () {
+
+ function onFormCreatedPrivate(arguments) {
+ 	setupInstascan();
+ }
+ 
+ function setupInstascan() {
+     let scanner = new Instascan.Scanner({
+             video: document.getElementById("preview"),
+             mirror: false // evita que o video fique espelhado
+         }
+     );
+ 
+     scanner.addListener("scan", onScannerScan);
+     
+     Instascan.Camera.getCameras().then(function (cameras) {
+        let selectedCamera;
+
+        // Tratamento para pegar a camera traseira do smartphone
+        if (cameras.length > 0) {
+           for (let c = 0; c < cameras.length; c++) {
+              if (cameras[c].name.indexOf('back') != -1) {
+                  selectedCamera = cameras[c];
+              }
+           }
+           
+           if (!selectedCamera) selectedCamera = cameras[0];
+        }
+        
+         if (selectedCamera) {
+             scanner.start(selectedCamera);
+         } else {
+             console.error("No cameras found.");
+         }
+     });
+ }
+ 
+ function onScannerScan(value) {
+ 	let form = latromi.formManager.getFormInstance();
+ 	form.setFieldValue('txtQrCodeValue', value);
+ }
+
+ return {
+ 	onFormCreated: onFormCreatedPrivate,
+ 	onEventFiring: function(arguments) {  },
+ 	onFieldValueChanged: function(arguments) { }
+ }
+};
+
+// Declara o formulário
+var myForm = new latromi.myForm();
+
+// Adiciona Callbacks no Formulário
+latromi.formManager.setOnFormCreatedCallback( myForm.onFormCreated );
+latromi.formManager.setOnEventFiringCallback( myForm.onEventFiring );
+latromi.formManager.setOnFieldValueChangedCallback( myForm.onFieldValueChanged );
+    </script>
+</body>
+</html>
